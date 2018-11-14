@@ -1,22 +1,72 @@
 
-test:
-    driver: postgres
-    open: user=liam dbname=tester sslmode=disable
+# test:
+#     driver: postgres
+#     open: user=liam dbname=tester sslmode=disable
 
-development:
-    driver: postgres
-    open: user=liam dbname=tester sslmode=disable
+# development:
+#     driver: postgres
+#     open: user=liam dbname=tester sslmode=disable
     
-production:
-    driver: postgres
-    open: user=liam dbname=tester sslmode=verify-full
+# production:
+#     driver: postgres
+#     open: user=liam dbname=tester sslmode=verify-full
 
-customimport:
-    driver: customdriver
-    open: customdriver open
-    import: github.com/custom/driver
-    dialect: mysql
+# customimport:
+#     driver: customdriver
+#     open: customdriver open
+#     import: github.com/custom/driver
+#     dialect: mysql
 
-environment_variable_config:
-    driver: $DB_DRIVER
-    open: $DATABASE_URL
+# environment_variable_config:
+#     driver: $DB_DRIVER
+#     open: $DATABASE_URL
+
+master:
+    development:
+        driver: mymysql
+        open: tcp:localhost:3306*leo_enish_master/root/
+
+    production:
+        driver: mymysql
+        open: tcp:210.152.8.231:3306*leo_enish_master/sync/sync
+
+    ci:
+        driver: mymysql
+        open: tcp:ci-mysql:3306*leo_enish_master/root/
+misc:
+    development:
+        driver: mymysql
+        open: tcp:localhost:3306*leo_enish_misc/root/
+
+    production:
+        driver: mymysql
+        open: tcp:210.152.15.173:3306*leo_enish_misc/sync/sync
+
+    ci:
+        driver: mymysql
+        open: tcp:ci-mysql:3306*leo_enish_misc/root/
+misc2:
+    development:
+        driver: mymysql
+        open: tcp:localhost:3306*leo_enish_misc2/root/
+
+    # todo fix
+    # production:
+    #    driver: mymysql
+    #    open: tcp:210.152.15.173:3306*leo_enish_misc2/sync/sync
+
+    ci:
+        driver: mymysql
+        open: tcp:ci-mysql:3306*leo_enish_misc2/root/
+user:
+    development:
+        driver: mymysql
+        open: tcp:localhost:3306*leo_enish_user/root/
+
+    production:
+        driver: mymysql
+        open: tcp:210.152.8.231:3306*leo_enish_user/sync/sync
+
+    ci:
+        driver: mymysql
+        open: tcp:ci-mysql:3306*leo_enish_user/root/

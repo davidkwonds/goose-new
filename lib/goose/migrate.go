@@ -20,16 +20,20 @@ import (
 )
 
 var (
+	// ErrTableDoesNotExist error table not exists
 	ErrTableDoesNotExist = errors.New("table does not exist")
+	// ErrNoPreviousVersion // error no previous version
 	ErrNoPreviousVersion = errors.New("no previous version found")
 )
 
+// MigrationRecord struct
 type MigrationRecord struct {
-	VersionId int64
+	VersionID int64
 	TStamp    time.Time
 	IsApplied bool // was this a result of up() or down()
 }
 
+// Migration struct
 type Migration struct {
 	Version  int64
 	Next     int64  // next version, or -1 if none
@@ -48,6 +52,7 @@ func newMigration(v int64, src string) *Migration {
 	return &Migration{v, -1, -1, src}
 }
 
+// RunMigrations run migrations
 func RunMigrations(conf *DBConf, migrationsDir string, target int64) (err error) {
 
 	db, err := OpenDBFromDBConf(conf)
@@ -59,7 +64,7 @@ func RunMigrations(conf *DBConf, migrationsDir string, target int64) (err error)
 	return RunMigrationsOnDb(conf, migrationsDir, target, db)
 }
 
-// Runs migration on a specific database instance.
+// RunMigrationsOnDb Runs migration on a specific database instance.
 func RunMigrationsOnDb(conf *DBConf, migrationsDir string, target int64, db *sql.DB) (err error) {
 	current, err := EnsureDBVersion(conf, db)
 	if err != nil {
@@ -93,7 +98,7 @@ func RunMigrationsOnDb(conf *DBConf, migrationsDir string, target int64, db *sql
 		}
 
 		if err != nil {
-			return errors.New(fmt.Sprintf("FAIL %v, quitting migration", err))
+			return fmt.Errorf("FAIL %v, quitting migration", err)
 		}
 
 		fmt.Println("OK   ", filepath.Base(m.Source))
@@ -102,7 +107,7 @@ func RunMigrationsOnDb(conf *DBConf, migrationsDir string, target int64, db *sql
 	return nil
 }
 
-// collect all the valid looking migration scripts in the
+// CollectMigrations collect all the valid looking migration scripts in the
 // migrations folder, and key them by version
 func CollectMigrations(dirpath string, current, target int64) (m []*Migration, err error) {
 
@@ -165,7 +170,7 @@ func (ms migrationSorter) Sort(direction bool) {
 	}
 }
 
-// look for migration scripts with names in the form:
+// NumericComponent look for migration scripts with names in the form:
 //  XXX_descriptivename.ext
 // where XXX specifies the version number
 // and ext specifies the type of migration
@@ -190,7 +195,7 @@ func NumericComponent(name string) (int64, error) {
 	return n, e
 }
 
-// retrieve the current version for this DB.
+// EnsureDBVersion retrieve the current version for this DB.
 // Create and initialize the DB version table if it doesn't exist.
 func EnsureDBVersion(conf *DBConf, db *sql.DB) (int64, error) {
 
@@ -211,14 +216,14 @@ func EnsureDBVersion(conf *DBConf, db *sql.DB) (int64, error) {
 
 	for rows.Next() {
 		var row MigrationRecord
-		if err = rows.Scan(&row.VersionId, &row.IsApplied); err != nil {
+		if err = rows.Scan(&row.VersionID, &row.IsApplied); err != nil {
 			log.Fatal("error scanning rows:", err)
 		}
 
 		// have we already marked this version to be skipped?
 		skip := false
 		for _, v := range toSkip {
-			if v == row.VersionId {
+			if v == row.VersionID {
 				skip = true
 				break
 			}
@@ -230,11 +235,11 @@ func EnsureDBVersion(conf *DBConf, db *sql.DB) (int64, error) {
 
 		// if version has been applied we're done
 		if row.IsApplied {
-			return row.VersionId, nil
+			return row.VersionID, nil
 		}
 
 		// latest version of migration has not been applied.
-		toSkip = append(toSkip, row.VersionId)
+		toSkip = append(toSkip, row.VersionID)
 	}
 
 	panic("failure in EnsureDBVersion()")
@@ -250,14 +255,14 @@ func createVersionTable(conf *DBConf, db *sql.DB) error {
 
 	d := conf.Driver.Dialect
 
-	if _, err := txn.Exec(d.createVersionTableSql()); err != nil {
+	if _, err := txn.Exec(d.createVersionTableSQL()); err != nil {
 		txn.Rollback()
 		return err
 	}
 
 	version := 0
 	applied := true
-	if _, err := txn.Exec(d.insertVersionSql(), version, applied); err != nil {
+	if _, err := txn.Exec(d.insertVersionSQL(), version, applied); err != nil {
 		txn.Rollback()
 		return err
 	}
@@ -265,7 +270,7 @@ func createVersionTable(conf *DBConf, db *sql.DB) error {
 	return txn.Commit()
 }
 
-// wrapper for EnsureDBVersion for callers that don't already have
+// GetDBVersion wrapper for EnsureDBVersion for callers that don't already have
 // their own DB instance
 func GetDBVersion(conf *DBConf) (version int64, err error) {
 
@@ -283,6 +288,7 @@ func GetDBVersion(conf *DBConf) (version int64, err error) {
 	return version, nil
 }
 
+// GetPreviousDBVersion last before db version
 func GetPreviousDBVersion(dirpath string, version int64) (previous int64, err error) {
 
 	previous = -1
@@ -318,7 +324,7 @@ func GetPreviousDBVersion(dirpath string, version int64) (previous int64, err er
 	return
 }
 
-// helper to identify the most recent possible version
+// GetMostRecentDBVersion helper to identify the most recent possible version
 // within a folder of migration scripts
 func GetMostRecentDBVersion(dirpath string) (version int64, err error) {
 
@@ -347,6 +353,7 @@ func GetMostRecentDBVersion(dirpath string) (version int64, err error) {
 	return
 }
 
+// CreateMigration create migration
 func CreateMigration(name, migrationType, dir string, t time.Time) (path string, err error) {
 
 	if migrationType != "go" && migrationType != "sql" {
@@ -370,12 +377,29 @@ func CreateMigration(name, migrationType, dir string, t time.Time) (path string,
 	return
 }
 
-// Update the version table for the given migration,
+// UpdateOldTable update old goose table
+func UpdateOldTable(conf *DBConf, db *sql.DB) error {
+	txn, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	d := conf.Driver.Dialect
+
+	if _, err := txn.Exec(d.updateTableSQL()); err != nil {
+		txn.Rollback()
+		return err
+	}
+
+	return txn.Commit()
+}
+
+// FinalizeMigration Update the version table for the given migration,
 // and finalize the transaction.
 func FinalizeMigration(conf *DBConf, txn *sql.Tx, direction bool, v int64) error {
 
 	// XXX: drop goose_db_version table on some minimum version number?
-	stmt := conf.Driver.Dialect.insertVersionSql()
+	stmt := conf.Driver.Dialect.insertVersionSQL()
 	if _, err := txn.Exec(stmt, v, direction); err != nil {
 		txn.Rollback()
 		return err
