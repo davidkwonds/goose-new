@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"goose/lib/goose"
 	"log"
 	"os"
+
+	"github.com/davidkwonds/goose-new/lib/goose"
 )
 
 var mvToWorkVersionCmd = &Command{

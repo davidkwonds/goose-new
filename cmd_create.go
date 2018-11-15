@@ -2,11 +2,12 @@ package main
 
 import (
 	"fmt"
-	"goose/lib/goose"
 	"log"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/davidkwonds/goose-new/lib/goose"
 )
 
 var createCmd = &Command{
