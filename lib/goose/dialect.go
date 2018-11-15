@@ -70,7 +70,7 @@ func (pg *PostgresDialect) updateTableSQL() string {
 }
 
 func (pg *PostgresDialect) updateVersionSQL() string {
-	return ""
+	return "UPDATE `goose_db_version` set work_version = $1 where version_id = $2"
 }
 
 ////////////////////////////
@@ -152,5 +152,5 @@ func (m *Sqlite3Dialect) updateTableSQL() string {
 }
 
 func (m *Sqlite3Dialect) updateVersionSQL() string {
-	return ""
+	return "UPDATE `goose_db_version` set work_version = ? where version_id = ?"
 }

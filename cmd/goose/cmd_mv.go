@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/davidkwonds/goose-new/lib/goose"
+	"goose/lib/goose"
 )
 
 var mvToWorkVersionCmd = &Command{
