@@ -23,7 +23,7 @@ type templateData struct {
 
 func init() {
 	gob.Register(PostgresDialect{})
-	gob.Register(MySqlDialect{})
+	gob.Register(MySQLDialect{})
 	gob.Register(Sqlite3Dialect{})
 }
 
@@ -69,7 +69,7 @@ func runGoMigration(conf *DBConf, path string, version int64, direction bool) er
 		Conf:       sb.String(),
 		Direction:  direction,
 		Func:       fmt.Sprintf("%v_%v", directionStr, version),
-		InsertStmt: conf.Driver.Dialect.insertVersionSql(),
+		InsertStmt: conf.Driver.Dialect.insertVersionSQL(),
 	}
 	main, e := writeTemplateToFile(filepath.Join(d, "goose_main.go"), goMigrationDriverTemplate, td)
 	if e != nil {

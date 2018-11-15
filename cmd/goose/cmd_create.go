@@ -1,8 +1,8 @@
 package main
 
 import (
-	"bitbucket.org/liamstask/goose/lib/goose"
 	"fmt"
+	"goose/lib/goose"
 	"log"
 	"os"
 	"path/filepath"

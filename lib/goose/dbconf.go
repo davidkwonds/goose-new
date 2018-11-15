@@ -2,7 +2,6 @@ package goose
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,9 +16,10 @@ type DBDriver struct {
 	Name    string
 	OpenStr string
 	Import  string
-	Dialect SqlDialect
+	Dialect SQLDialect
 }
 
+// DBConf struct
 type DBConf struct {
 	MigrationsDir string
 	Env           string
@@ -27,8 +27,8 @@ type DBConf struct {
 	PgSchema      string
 }
 
-// extract configuration details from the given file
-func NewDBConf(p, env string, pgschema string) (*DBConf, error) {
+// NewDBConf extract configuration details from the given file
+func NewDBConf(p, database, env string, pgschema string) (*DBConf, error) {
 
 	cfgFile := filepath.Join(p, "dbconf.yml")
 
@@ -37,13 +37,13 @@ func NewDBConf(p, env string, pgschema string) (*DBConf, error) {
 		return nil, err
 	}
 
-	drv, err := f.Get(fmt.Sprintf("%s.driver", env))
+	drv, err := f.Get(fmt.Sprintf("%s.%s.driver", database, env))
 	if err != nil {
 		return nil, err
 	}
 	drv = os.ExpandEnv(drv)
 
-	open, err := f.Get(fmt.Sprintf("%s.open", env))
+	open, err := f.Get(fmt.Sprintf("%s.%s.open", database, env))
 	if err != nil {
 		return nil, err
 	}
@@ -61,21 +61,21 @@ func NewDBConf(p, env string, pgschema string) (*DBConf, error) {
 	d := newDBDriver(drv, open)
 
 	// allow the configuration to override the Import for this driver
-	if imprt, err := f.Get(fmt.Sprintf("%s.import", env)); err == nil {
+	if imprt, err := f.Get(fmt.Sprintf("%s.%s.import", database, env)); err == nil {
 		d.Import = imprt
 	}
 
 	// allow the configuration to override the Dialect for this driver
-	if dialect, err := f.Get(fmt.Sprintf("%s.dialect", env)); err == nil {
+	if dialect, err := f.Get(fmt.Sprintf("%s.%s.dialect", database, env)); err == nil {
 		d.Dialect = dialectByName(dialect)
 	}
 
 	if !d.IsValid() {
-		return nil, errors.New(fmt.Sprintf("Invalid DBConf: %v", d))
+		return nil, fmt.Errorf("Invalid DBConf: %v", d)
 	}
 
 	return &DBConf{
-		MigrationsDir: filepath.Join(p, "migrations"),
+		MigrationsDir: filepath.Join(p, database, "migrations"),
 		Env:           env,
 		Driver:        d,
 		PgSchema:      pgschema,
@@ -99,11 +99,11 @@ func newDBDriver(name, open string) DBDriver {
 
 	case "mymysql":
 		d.Import = "github.com/ziutek/mymysql/godrv"
-		d.Dialect = &MySqlDialect{}
+		d.Dialect = &MySQLDialect{}
 
 	case "mysql":
 		d.Import = "github.com/go-sql-driver/mysql"
-		d.Dialect = &MySqlDialect{}
+		d.Dialect = &MySQLDialect{}
 
 	case "sqlite3":
 		d.Import = "github.com/mattn/go-sqlite3"
@@ -113,7 +113,7 @@ func newDBDriver(name, open string) DBDriver {
 	return d
 }
 
-// ensure we have enough info about this driver
+// IsValid ensure we have enough info about this driver
 func (drv *DBDriver) IsValid() bool {
 	return len(drv.Import) > 0 && drv.Dialect != nil
 }

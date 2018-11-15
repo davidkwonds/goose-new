@@ -1,22 +1,25 @@
 package main
 
 import (
-	"bitbucket.org/liamstask/goose/lib/goose"
 	"flag"
 	"fmt"
 	"os"
 	"strings"
 	"text/template"
+
+	"goose/lib/goose"
 )
 
 // global options. available to any subcommands.
-var flagPath = flag.String("path", "db", "folder containing db info")
+var flagPath = flag.String("path", "database", "folder containing db info")
+var flagDatabase = flag.String("db", "master", "which database to use")
 var flagEnv = flag.String("env", "development", "which DB environment to use")
 var flagPgSchema = flag.String("pgschema", "", "which postgres-schema to migrate (default = none)")
+var flagVersion = flag.String("v", "", "target version")
 
 // helper to create a DBConf from the given flags
 func dbConfFromFlags() (dbconf *goose.DBConf, err error) {
-	return goose.NewDBConf(*flagPath, *flagEnv, *flagPgSchema)
+	return goose.NewDBConf(*flagPath, *flagDatabase, *flagEnv, *flagPgSchema)
 }
 
 var commands = []*Command{
@@ -26,6 +29,7 @@ var commands = []*Command{
 	statusCmd,
 	createCmd,
 	dbVersionCmd,
+	updatetableCmd,
 }
 
 func main() {
