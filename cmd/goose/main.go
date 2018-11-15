@@ -30,6 +30,7 @@ var commands = []*Command{
 	createCmd,
 	dbVersionCmd,
 	updatetableCmd,
+	mvToWorkVersionCmd,
 }
 
 func main() {

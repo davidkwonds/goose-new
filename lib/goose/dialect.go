@@ -13,6 +13,7 @@ type SQLDialect interface {
 	insertVersionSQL() string      // sql string to insert the initial version table row
 	dbVersionQuery(db *sql.DB, workVersion string) (*sql.Rows, error)
 	updateTableSQL() string
+	updateVersionSQL() string
 }
 
 // drivers that we don't know about can ask for a dialect by name
@@ -68,6 +69,10 @@ func (pg *PostgresDialect) updateTableSQL() string {
 	return "ALTER TABLE `goose_db_version` ADD `work_version` VARCHAR(32)  NOT NULL"
 }
 
+func (pg *PostgresDialect) updateVersionSQL() string {
+	return ""
+}
+
 ////////////////////////////
 // MySQL
 ////////////////////////////
@@ -107,6 +112,10 @@ func (m *MySQLDialect) updateTableSQL() string {
 	return "ALTER TABLE `goose_db_version` ADD `work_version` VARCHAR(32)  NOT NULL"
 }
 
+func (m *MySQLDialect) updateVersionSQL() string {
+	return "UPDATE `goose_db_version` set work_version = ? where version_id = ?"
+}
+
 ////////////////////////////
 // sqlite3
 ////////////////////////////
@@ -140,4 +149,8 @@ func (m Sqlite3Dialect) dbVersionQuery(db *sql.DB, workVersion string) (*sql.Row
 
 func (m *Sqlite3Dialect) updateTableSQL() string {
 	return "ALTER TABLE `goose_db_version` ADD `work_version` TEXT  NOT NULL"
+}
+
+func (m *Sqlite3Dialect) updateVersionSQL() string {
+	return ""
 }

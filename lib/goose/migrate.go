@@ -437,3 +437,36 @@ var sqlMigrationTemplate = template.Must(template.New("goose.sql-migration").Par
 -- SQL section 'Down' is executed when this migration is rolled back
 
 `))
+
+// MoveFileToWorkVersion move file to work version directory
+func MoveFileToWorkVersion(conf *DBConf, filename string, db *sql.DB) error {
+	path := fmt.Sprintf("%s/%s", conf.MigrationsDir, filename)
+	newPath := fmt.Sprintf("%s/%s", conf.GetMigrationDir(), filename)
+	_, err := os.Stat(path)
+	if err != nil {
+		log.Fatal(fmt.Sprintf("goose mv: file is not exists, %s", path))
+	}
+	num, err := NumericComponent(filename)
+	if err != nil {
+		return err
+	}
+
+	err = os.Rename(path, newPath)
+	if err != nil {
+		return err
+	}
+
+	txn, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	d := conf.Driver.Dialect
+
+	if _, err := txn.Exec(d.updateVersionSQL(), conf.WorkVersion, num); err != nil {
+		txn.Rollback()
+		return err
+	}
+
+	return txn.Commit()
+}
