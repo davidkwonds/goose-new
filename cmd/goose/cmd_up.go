@@ -21,12 +21,12 @@ func upRun(cmd *Command, args ...string) {
 		log.Fatal(err)
 	}
 
-	target, err := goose.GetMostRecentDBVersion(conf.MigrationsDir)
+	target, err := goose.GetMostRecentDBVersion(conf.GetMigrationDir())
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := goose.RunMigrations(conf, conf.MigrationsDir, target); err != nil {
+	if err := goose.RunMigrations(conf, target); err != nil {
 		log.Fatal(err)
 	}
 }

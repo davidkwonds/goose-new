@@ -8,7 +8,7 @@ import (
 
 func TestBasics(t *testing.T) {
 
-	dbconf, err := NewDBConf("../../db-sample", "test", "")
+	dbconf, err := NewDBConf("../../db-sample", "master", "test", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -25,7 +25,7 @@ func TestBasics(t *testing.T) {
 
 func TestImportOverride(t *testing.T) {
 
-	dbconf, err := NewDBConf("../../db-sample", "customimport", "")
+	dbconf, err := NewDBConf("../../db-sample", "master", "customimport", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,15 +39,15 @@ func TestImportOverride(t *testing.T) {
 
 func TestDriverSetFromEnvironmentVariable(t *testing.T) {
 
-	databaseUrlEnvVariableKey := "DB_DRIVER"
-	databaseUrlEnvVariableVal := "sqlite3"
+	databaseURLEnvVariableKey := "DB_DRIVER"
+	databaseURLEnvVariableVal := "sqlite3"
 	databaseOpenStringKey := "DATABASE_URL"
 	databaseOpenStringVal := "db.db"
 
-	os.Setenv(databaseUrlEnvVariableKey, databaseUrlEnvVariableVal)
+	os.Setenv(databaseURLEnvVariableKey, databaseURLEnvVariableVal)
 	os.Setenv(databaseOpenStringKey, databaseOpenStringVal)
 
-	dbconf, err := NewDBConf("../../db-sample", "environment_variable_config", "")
+	dbconf, err := NewDBConf("../../db-sample", "master", "environment_variable_config", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
