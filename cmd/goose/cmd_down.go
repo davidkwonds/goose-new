@@ -25,12 +25,12 @@ func downRun(cmd *Command, args ...string) {
 		log.Fatal(err)
 	}
 
-	previous, err := goose.GetPreviousDBVersion(conf.MigrationsDir, current)
+	previous, err := goose.GetPreviousDBVersion(conf.GetMigrationDir(), current)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err = goose.RunMigrations(conf, conf.MigrationsDir, previous); err != nil {
+	if err = goose.RunMigrations(conf, previous); err != nil {
 		log.Fatal(err)
 	}
 }

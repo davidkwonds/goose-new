@@ -25,10 +25,16 @@ type DBConf struct {
 	Env           string
 	Driver        DBDriver
 	PgSchema      string
+	WorkVersion   string
+}
+
+// GetMigrationDir get mirgration dir
+func (m *DBConf) GetMigrationDir() string {
+	return fmt.Sprintf("%s/%s", m.MigrationsDir, m.WorkVersion)
 }
 
 // NewDBConf extract configuration details from the given file
-func NewDBConf(p, database, env string, pgschema string) (*DBConf, error) {
+func NewDBConf(p, database, env, pgschema, workVersion string) (*DBConf, error) {
 
 	cfgFile := filepath.Join(p, "dbconf.yml")
 
@@ -79,6 +85,7 @@ func NewDBConf(p, database, env string, pgschema string) (*DBConf, error) {
 		Env:           env,
 		Driver:        d,
 		PgSchema:      pgschema,
+		WorkVersion:   workVersion,
 	}, nil
 }
 

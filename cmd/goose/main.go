@@ -19,7 +19,7 @@ var flagVersion = flag.String("v", "", "target version")
 
 // helper to create a DBConf from the given flags
 func dbConfFromFlags() (dbconf *goose.DBConf, err error) {
-	return goose.NewDBConf(*flagPath, *flagDatabase, *flagEnv, *flagPgSchema)
+	return goose.NewDBConf(*flagPath, *flagDatabase, *flagEnv, *flagPgSchema, *flagVersion)
 }
 
 var commands = []*Command{

@@ -33,11 +33,11 @@ func createRun(cmd *Command, args ...string) {
 		log.Fatal(err)
 	}
 
-	if err = os.MkdirAll(conf.MigrationsDir, 0777); err != nil {
+	if err = os.MkdirAll(conf.GetMigrationDir(), 0777); err != nil {
 		log.Fatal(err)
 	}
 
-	n, err := goose.CreateMigration(args[0], migrationType, conf.MigrationsDir, time.Now())
+	n, err := goose.CreateMigration(args[0], migrationType, conf, time.Now())
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -13,6 +13,7 @@ import (
 	"text/template"
 	"time"
 
+	// mymysql driver
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -53,7 +54,7 @@ func newMigration(v int64, src string) *Migration {
 }
 
 // RunMigrations run migrations
-func RunMigrations(conf *DBConf, migrationsDir string, target int64) (err error) {
+func RunMigrations(conf *DBConf, target int64) (err error) {
 
 	db, err := OpenDBFromDBConf(conf)
 	if err != nil {
@@ -61,11 +62,12 @@ func RunMigrations(conf *DBConf, migrationsDir string, target int64) (err error)
 	}
 	defer db.Close()
 
-	return RunMigrationsOnDb(conf, migrationsDir, target, db)
+	return RunMigrationsOnDb(conf, target, db)
 }
 
 // RunMigrationsOnDb Runs migration on a specific database instance.
-func RunMigrationsOnDb(conf *DBConf, migrationsDir string, target int64, db *sql.DB) (err error) {
+func RunMigrationsOnDb(conf *DBConf, target int64, db *sql.DB) (err error) {
+	migrationsDir := conf.GetMigrationDir()
 	current, err := EnsureDBVersion(conf, db)
 	if err != nil {
 		return err
@@ -199,7 +201,7 @@ func NumericComponent(name string) (int64, error) {
 // Create and initialize the DB version table if it doesn't exist.
 func EnsureDBVersion(conf *DBConf, db *sql.DB) (int64, error) {
 
-	rows, err := conf.Driver.Dialect.dbVersionQuery(db)
+	rows, err := conf.Driver.Dialect.dbVersionQuery(db, conf.WorkVersion)
 	if err != nil {
 		if err == ErrTableDoesNotExist {
 			return 0, createVersionTable(conf, db)
@@ -262,7 +264,7 @@ func createVersionTable(conf *DBConf, db *sql.DB) error {
 
 	version := 0
 	applied := true
-	if _, err := txn.Exec(d.insertVersionSQL(), version, applied); err != nil {
+	if _, err := txn.Exec(d.insertVersionSQL(), version, applied, conf.WorkVersion); err != nil {
 		txn.Rollback()
 		return err
 	}
@@ -354,8 +356,8 @@ func GetMostRecentDBVersion(dirpath string) (version int64, err error) {
 }
 
 // CreateMigration create migration
-func CreateMigration(name, migrationType, dir string, t time.Time) (path string, err error) {
-
+func CreateMigration(name, migrationType string, conf *DBConf, t time.Time) (path string, err error) {
+	dir := conf.GetMigrationDir()
 	if migrationType != "go" && migrationType != "sql" {
 		return "", errors.New("migration type must be 'go' or 'sql'")
 	}
@@ -400,7 +402,7 @@ func FinalizeMigration(conf *DBConf, txn *sql.Tx, direction bool, v int64) error
 
 	// XXX: drop goose_db_version table on some minimum version number?
 	stmt := conf.Driver.Dialect.insertVersionSQL()
-	if _, err := txn.Exec(stmt, v, direction); err != nil {
+	if _, err := txn.Exec(stmt, v, direction, conf.WorkVersion); err != nil {
 		txn.Rollback()
 		return err
 	}
