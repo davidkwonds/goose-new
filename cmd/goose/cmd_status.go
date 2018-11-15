@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"time"
 
-	"goose/lib/goose"
+	"github.com/davidkwonds/goose-new/goose/lib/goose"
 )
 
 var statusCmd = &Command{
