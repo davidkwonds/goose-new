@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"goose/lib/goose"
+	"github.com/davidkwonds/goose-new/lib/goose"
 )
 
 var upCmd = &Command{

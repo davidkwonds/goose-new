@@ -1,8 +1,9 @@
 package main
 
 import (
-	"goose/lib/goose"
 	"log"
+
+	"github.com/davidkwonds/goose-new/lib/goose"
 )
 
 var downCmd = &Command{
