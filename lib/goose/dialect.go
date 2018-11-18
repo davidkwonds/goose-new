@@ -2,6 +2,7 @@ package goose
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/mattn/go-sqlite3"
 )
@@ -96,7 +97,7 @@ func (m MySQLDialect) insertVersionSQL() string {
 }
 
 func (m MySQLDialect) dbVersionQuery(db *sql.DB, workVersion string) (*sql.Rows, error) {
-	rows, err := db.Query("SELECT version_id, is_applied from goose_db_version ORDER BY id DESC")
+	rows, err := db.Query(fmt.Sprintf("SELECT version_id, is_applied from goose_db_version where work_version = '%s' ORDER BY id DESC", workVersion))
 
 	// XXX: check for mysql specific error indicating the table doesn't exist.
 	// for now, assume any error is because the table doesn't exist,
