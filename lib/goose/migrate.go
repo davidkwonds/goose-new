@@ -117,7 +117,10 @@ func CollectMigrations(dirpath string, current, target int64) (m []*Migration, e
 	// filter out any uninteresting files,
 	// and ensure we only have one file per migration version.
 	filepath.Walk(dirpath, func(name string, info os.FileInfo, err error) error {
-
+		// for work version skip sub directory
+		if info.IsDir() {
+			return filepath.SkipDir
+		}
 		if v, e := NumericComponent(name); e == nil {
 
 			for _, g := range m {
@@ -244,7 +247,7 @@ func EnsureDBVersion(conf *DBConf, db *sql.DB) (int64, error) {
 		toSkip = append(toSkip, row.VersionID)
 	}
 
-	panic("failure in EnsureDBVersion()")
+	return 0, insertFirstVersion(conf, db)
 }
 
 // Create the goose_db_version table
@@ -262,6 +265,23 @@ func createVersionTable(conf *DBConf, db *sql.DB) error {
 		return err
 	}
 
+	version := 0
+	applied := true
+	if _, err := txn.Exec(d.insertVersionSQL(), version, applied, conf.WorkVersion); err != nil {
+		txn.Rollback()
+		return err
+	}
+
+	return txn.Commit()
+}
+
+func insertFirstVersion(conf *DBConf, db *sql.DB) error {
+	txn, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	d := conf.Driver.Dialect
 	version := 0
 	applied := true
 	if _, err := txn.Exec(d.insertVersionSQL(), version, applied, conf.WorkVersion); err != nil {
