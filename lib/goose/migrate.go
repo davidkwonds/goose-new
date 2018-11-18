@@ -73,7 +73,7 @@ func RunMigrationsOnDb(conf *DBConf, target int64, db *sql.DB) (err error) {
 		return err
 	}
 
-	migrations, err := CollectMigrations(migrationsDir, current, target)
+	migrations, err := CollectMigrations(migrationsDir, conf.WorkVersion, current, target)
 	if err != nil {
 		return err
 	}
@@ -111,14 +111,14 @@ func RunMigrationsOnDb(conf *DBConf, target int64, db *sql.DB) (err error) {
 
 // CollectMigrations collect all the valid looking migration scripts in the
 // migrations folder, and key them by version
-func CollectMigrations(dirpath string, current, target int64) (m []*Migration, err error) {
+func CollectMigrations(dirpath, workVersion string, current, target int64) (m []*Migration, err error) {
 
 	// extract the numeric component of each migration,
 	// filter out any uninteresting files,
 	// and ensure we only have one file per migration version.
 	filepath.Walk(dirpath, func(name string, info os.FileInfo, err error) error {
 		// for work version skip sub directory
-		if info.IsDir() {
+		if dirpath != name && info.IsDir() {
 			return filepath.SkipDir
 		}
 		if v, e := NumericComponent(name); e == nil {
