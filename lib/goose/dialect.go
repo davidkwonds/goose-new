@@ -54,7 +54,7 @@ func (pg PostgresDialect) insertVersionSQL() string {
 }
 
 func (pg PostgresDialect) dbVersionQuery(db *sql.DB, workVersion string) (*sql.Rows, error) {
-	rows, err := db.Query("SELECT version_id, is_applied from goose_db_version ORDER BY id DESC")
+	rows, err := db.Query(fmt.Sprintf("SELECT version_id, is_applied from goose_db_version where work_version = '%s' ORDER BY id DESC", workVersion))
 
 	// XXX: check for postgres specific error indicating the table doesn't exist.
 	// for now, assume any error is because the table doesn't exist,
@@ -139,7 +139,7 @@ func (m Sqlite3Dialect) insertVersionSQL() string {
 }
 
 func (m Sqlite3Dialect) dbVersionQuery(db *sql.DB, workVersion string) (*sql.Rows, error) {
-	rows, err := db.Query("SELECT version_id, is_applied from goose_db_version ORDER BY id DESC")
+	rows, err := db.Query(fmt.Sprintf("SELECT version_id, is_applied from goose_db_version where work_version = '%s' ORDER BY id DESC", workVersion))
 
 	switch err.(type) {
 	case sqlite3.Error:
