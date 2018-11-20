@@ -25,6 +25,7 @@ func dbConfFromFlags() (dbconf *goose.DBConf, err error) {
 var commands = []*Command{
 	upCmd,
 	downCmd,
+	downAllCmd,
 	redoCmd,
 	statusCmd,
 	createCmd,
