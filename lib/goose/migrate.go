@@ -73,7 +73,7 @@ func RunMigrationsOnDb(conf *DBConf, target int64, db *sql.DB) (err error) {
 		return err
 	}
 
-	migrations, err := CollectMigrations(migrationsDir, conf.WorkVersion, current, target)
+	migrations, err := CollectMigrations(migrationsDir, current, target)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func RunMigrationsOnDb(conf *DBConf, target int64, db *sql.DB) (err error) {
 
 // CollectMigrations collect all the valid looking migration scripts in the
 // migrations folder, and key them by version
-func CollectMigrations(dirpath, workVersion string, current, target int64) (m []*Migration, err error) {
+func CollectMigrations(dirpath string, current, target int64) (m []*Migration, err error) {
 
 	// extract the numeric component of each migration,
 	// filter out any uninteresting files,
@@ -317,7 +317,10 @@ func GetPreviousDBVersion(dirpath string, version int64) (previous int64, err er
 	sawGivenVersion := false
 
 	filepath.Walk(dirpath, func(name string, info os.FileInfo, walkerr error) error {
-
+		// for work version skip sub directory
+		if dirpath != name && info.IsDir() {
+			return filepath.SkipDir
+		}
 		if !info.IsDir() {
 			if v, e := NumericComponent(name); e == nil {
 				if v > previous && v < version {
@@ -355,6 +358,10 @@ func GetMostRecentDBVersion(dirpath string) (version int64, err error) {
 	filepath.Walk(dirpath, func(name string, info os.FileInfo, walkerr error) error {
 		if walkerr != nil {
 			return walkerr
+		}
+		// for work version skip sub directory
+		if dirpath != name && info.IsDir() {
+			return filepath.SkipDir
 		}
 
 		if !info.IsDir() {

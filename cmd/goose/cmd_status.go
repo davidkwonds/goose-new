@@ -18,6 +18,7 @@ var statusCmd = &Command{
 	Run:     statusRun,
 }
 
+// StatusData struct
 type StatusData struct {
 	Source string
 	Status string
@@ -33,7 +34,7 @@ func statusRun(cmd *Command, args ...string) {
 	// collect all migrations
 	min := int64(0)
 	max := int64((1 << 63) - 1)
-	migrations, e := goose.CollectMigrations(conf.MigrationsDir, conf.WorkVersion, min, max)
+	migrations, e := goose.CollectMigrations(conf.GetMigrationDir(), min, max)
 	if e != nil {
 		log.Fatal(e)
 	}
